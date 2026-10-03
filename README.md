@@ -22,6 +22,8 @@ The selector sees only eight pre-decision features: request variance, request ra
 
 ## Setup and reproduction (Windows PowerShell)
 
+For the simplest Windows workflow, double-click **`Run Project.bat`**. It runs the tests and experiment, then opens the results folder. If Python is not installed, it displays installation instructions instead of closing silently.
+
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
