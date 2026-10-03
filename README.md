@@ -24,7 +24,7 @@ A separately reported random-forest extension adds four sequential-pattern featu
 
 ## Setup and reproduction (Windows PowerShell)
 
-For the simplest Windows workflow, double-click **`Run Project.bat`**. It runs the tests and experiment, then opens the results folder. If Python is not installed, it displays installation instructions instead of closing silently.
+For the simplest Windows workflow, double-click **`Run Project.bat`**. On the first run it creates a local `.venv`, installs any missing pinned packages, runs the tests and complete experiment, and then opens the results folder. If Python is not installed, it displays installation instructions instead of closing silently.
 
 For a live custom-queue demonstration, double-click **`Run Demo.bat`**, or run one of these commands after setup:
 
@@ -94,7 +94,7 @@ src/demo.py         interactive custom-queue demonstration
 src/run_all.py      complete deterministic pipeline
 tests/              course-example and edge-case unit tests
 results/            raw/generated evidence
-report/report.pdf   finished four-page term paper
+report/report.pdf   final term paper (cover plus four numbered pages)
 report/report.tex   editable LaTeX source
 ```
 
