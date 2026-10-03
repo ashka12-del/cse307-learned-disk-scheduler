@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from dataset import build_dataset  # noqa: E402
+from analysis_extras import model_comparison, per_workload_table, sensitivity_check  # noqa: E402
 from evaluate import evaluate_shifts, evaluate_test, make_figures, write_summary  # noqa: E402
 from model import train_selector  # noqa: E402
 
@@ -23,8 +24,10 @@ def main() -> None:
     results_dir = ROOT / "results"
     results_dir.mkdir(exist_ok=True)
     train = build_dataset(range(1, 21), split="train")
+    validation = build_dataset(range(21, 31), split="validation")
     test = build_dataset(range(100, 111), split="test")
     train.to_csv(results_dir / "train_windows.csv", index=False)
+    validation.to_csv(results_dir / "validation_windows.csv", index=False)
     test.to_csv(results_dir / "test_windows.csv", index=False)
     print("Training oracle-label distribution (ties preserved):", distribution(train))
     print("Test oracle-label distribution (ties preserved):", distribution(test))
@@ -33,14 +36,28 @@ def main() -> None:
     evaluation_summary, evaluated = evaluate_test(model, test, results_dir)
     shift_summary, shifts = evaluate_shifts(model, results_dir)
     make_figures(evaluated, shifts, results_dir)
+    workload_table = per_workload_table(evaluated, results_dir)
+    comparison = model_comparison(train, validation, test, results_dir)
+    sensitivity = sensitivity_check(results_dir)
+    selected_extension = comparison.loc[
+        (comparison["split"] == "validation") & comparison["selected_on_validation"], "model"
+    ].iloc[0]
     summary = {
         "configuration": {"tracks": [0, 199], "head": 50, "window_size": 50, "windows_per_workload_per_seed": 20,
-                          "train_seeds": [1, 20], "test_seeds": [100, 110],
+                          "train_seeds": [1, 20], "validation_seeds": [21, 30], "test_seeds": [100, 110],
                           "model": "DecisionTreeClassifier(max_depth=5, min_samples_leaf=12, class_weight=balanced, random_state=42)"},
         "training": {"windows_total": int(len(train)), "windows_primary_non_tied": int(len(primary_train)),
                      "ties": int(train["tie"].sum()), "oracle_label_distribution_including_ties": distribution(train),
                      "primary_label_distribution": primary_train["label"].value_counts().sort_index().astype(int).to_dict()},
-        "testing": evaluation_summary, "shifts": shift_summary,
+        "testing": evaluation_summary,
+        "per_workload": workload_table.to_dict(orient="records"),
+        "model_extension": {
+            "selection_rule": "highest validation tie-aware accuracy, then lowest validation mean regret",
+            "selected_on_validation": selected_extension,
+            "comparison_file": "model_comparison.csv",
+        },
+        "window_size_sensitivity": sensitivity.to_dict(orient="records"),
+        "shifts": shift_summary,
     }
     write_summary(summary, results_dir)
     print("Primary training-label distribution:", summary["training"]["primary_label_distribution"])
@@ -48,6 +65,7 @@ def main() -> None:
     print(f"All-window tie-aware accuracy: {evaluation_summary['accuracy_all_tie_aware']:.3f}")
     print(f"Mean selector regret: {evaluation_summary['mean_regret']:.3f} tracks/window")
     print(f"ECE (10 bins): {evaluation_summary['ece_10_bins']:.3f}")
+    print(f"Validation-selected extension: {selected_extension}")
     print(f"Results written to: {results_dir}")
 
 

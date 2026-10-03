@@ -15,7 +15,10 @@ def _clip(values: np.ndarray) -> list[int]:
 def sequential_workload(rng: np.random.Generator, size: int = 50) -> list[int]:
     """Mostly monotonic locality with small timing/order noise."""
     direction = int(rng.choice([-1, 1]))
-    step = int(rng.integers(1, 5))
+    # Keep the nominal trend inside the physical track range, including in
+    # window-size sensitivity experiments.
+    maximum_step = max(1, min(4, TRACK_MAX // max(1, size - 1)))
+    step = int(rng.integers(1, maximum_step + 1))
     span = step * (size - 1)
     if direction > 0:
         start = int(rng.integers(TRACK_MIN, max(TRACK_MIN + 1, TRACK_MAX - span + 1)))
