@@ -1,31 +1,59 @@
 \documentclass[10pt,a4paper]{article}
-\usepackage[margin=0.67in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=0.72in]{geometry}
+\usepackage{setspace}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{tabularx}
+\usepackage{amsmath}
 \usepackage{microtype}
-\usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{enumitem}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\setstretch{1.04}
 \setlist{nosep,leftmargin=*}
-\captionsetup{font=small,skip=3pt}
+\captionsetup{font=small,labelfont=bf,skip=3pt}
+\renewcommand{\arraystretch}{1.12}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{3.5pt}
-\title{\vspace{-1.5em}\textbf{A Learned Selector for Classical Disk Scheduling}\vspace{-0.5em}}
-\author{CSE-307 Operating Systems -- Track 2}
-\date{}
+\setcounter{secnumdepth}{2}
 
 \begin{document}
-\maketitle
-\vspace{-2em}
+
+\begin{center}
+{\large\bfseries Military Institute of Science and Technology\par}
+\vspace{0.05in}
+{\normalsize\bfseries Department of Computer Science and Engineering\par}
+\vspace{0.12in}
+\rule{\textwidth}{0.5pt}\par
+\vspace{0.10in}
+{\LARGE\bfseries A Learned Selector for Classical Disk Scheduling\par}
+\vspace{0.07in}
+{\large Term Paper -- Track 2\par}
+\vspace{0.13in}
+\begin{tabularx}{0.90\textwidth}{@{}>{\bfseries\raggedright\arraybackslash}p{1.25in} >{\raggedright\arraybackslash}X
+                                      >{\bfseries\raggedright\arraybackslash}p{0.90in} >{\raggedright\arraybackslash}p{1.15in}@{}}
+Student Name: & Aria Nawshin Ashka & Student ID: & 202414021 \\
+Course: & CSE-307 & Course Title: & Operating Systems \\
+\end{tabularx}
+\vspace{0.08in}
+\rule{\textwidth}{0.5pt}
+\end{center}
+\vspace{-0.04in}
 
 \begin{abstract}
 No fixed disk-scheduling policy is optimal for every request pattern. This work implements FCFS, SSTF, SCAN, and C-SCAN and trains a small decision tree to choose a policy from an incoming request window. Experiments use reproducible sequential, random, and bursty synthetic workloads, disjoint training, validation, and test seeds, and explicit workload shifts. On 660 held-out 50-request windows, the main selector achieved 75.61\% tie-aware accuracy and 124,574 tracks of movement, improving on the best fixed policy, SSTF (133,276), while approaching an offline oracle (119,296). Confidence was higher on correct than incorrect predictions (0.877 versus 0.778), although an expected calibration error (ECE) of 0.148 shows overconfidence remains. A validation-selected random-forest extension improved accuracy and calibration but not seek regret, demonstrating why decision accuracy and operating-system cost must both be reported.
 \end{abstract}
 
-\section{Problem and Design}
+\noindent\textbf{Keywords:} disk scheduling, FCFS, SSTF, SCAN, C-SCAN, decision tree, calibration
+
+\section{Introduction and System Design}
 Disk scheduling determines the order in which a device services pending track requests. FCFS preserves arrival order but can travel unnecessarily; SSTF greedily chooses the nearest request and may starve distant requests; SCAN sweeps like an elevator; and C-SCAN provides a one-directional sweep with a wrap \cite{osc}. Their relative cost depends on locality and request order, motivating an adaptive selector.
 
 The simulator uses tracks 0--199. In the main experiment the head resets to 50 for every independent, non-overlapping 50-request window. Following the course convention, SCAN initially moves toward 0, reaches physical track 0, then reverses. C-SCAN also moves toward 0, reaches 0, wraps to 199, and counts that wrap. Unit tests reproduce the course queue $[98,183,37,122,14,124,65,67]$ from head 53: FCFS=640, SSTF=236, SCAN=236, and C-SCAN=386.
@@ -37,7 +65,7 @@ Sequential workloads are mostly monotonic with small positional noise; random wo
 
 Two 40-window stress timelines change after window 20: sequential$\rightarrow$random and random$\rightarrow$bursty. Metrics are total seek, tie-aware accuracy, selector regret (selected cost minus oracle cost), confusion matrix, confidence on correct versus wrong cases, a reliability diagram, and 10-bin ECE \cite{calibration}. The implementation uses Python, NumPy, pandas, Matplotlib, and scikit-learn \cite{sklearn}; raw CSVs and fixed seeds make every result reproducible.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Total seek on all 660 held-out windows. ``Always SSTF'' is the strongest single fixed-policy baseline.}
 \label{tab:overall}
@@ -56,7 +84,7 @@ SCAN & 144,737 & Learned selector & \textbf{124,574} \\
 \section{Results and Analysis}
 Table~\ref{tab:overall} shows that the selector saves 8,702 tracks (6.53\%) relative to always choosing SSTF. It is only 5,278 tracks above the oracle over all windows, or 8.00 tracks per window. The 597 non-tied windows give 74.37\% ordinary accuracy; accepting any tied oracle winner gives 75.61\% over all 660 windows. Classification accuracy alone is insufficient: a wrong choice may have almost the same seek cost as the winner, while a less frequent error can be expensive.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Per-workload held-out seek totals for 220 windows each.}
 \label{tab:workload}
@@ -78,7 +106,7 @@ C-SCAN never wins under this experimental convention because the head begins nea
 
 Confidence is meaningfully informative: the main tree averages 0.877 when correct and 0.778 when wrong. However, ECE=0.148 and the reliability curve show imperfect calibration. Under the sequential$\rightarrow$random shift, mean regret falls from 19.06 to 3.18 after the change while confidence falls from 0.861 to 0.809. Under random$\rightarrow$bursty, regret falls from 4.32 to 1.49 and confidence rises from 0.799 to 0.889. Thus the model responds to changed feature distributions, but its probability should not be interpreted as a guarantee.
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \begin{subfigure}{0.49\textwidth}
 \includegraphics[width=\linewidth]{../results/confusion_matrix.png}
@@ -99,11 +127,12 @@ The forest reaches 79.09\% tie-aware test accuracy, 70.91\% sequential accuracy,
 
 A window-size sensitivity check retrains the tree at 30, 50, and 100 requests. Tie-aware accuracy is 81.52\%, 75.61\%, and 84.39\%, respectively; mean regret is 4.05, 8.00, and 2.95. SSTF remains the best fixed scheduler at each size, and the selector remains better than that fixed baseline. The exact performance is sensitive to window length, but the principal ranking is unchanged.
 
-\section{Limitations, Conclusion, and AI Use}
+\section{Limitations and Conclusion}
 This simulation measures seek distance only. It omits rotational latency, caching, SSD behavior, concurrent arrivals during service, priorities, starvation, and device-level timing. Complete windows and an offline oracle simplify a real online problem. The fixed head and fixed SCAN direction also limit generalization. Future work should use rolling windows, multiple head positions, cost-sensitive training, and calibration learned on a dedicated calibration set.
 
 Within these limits, the learned tree improves over every fixed scheduler and comes close to the oracle while exposing useful confidence information. The results also show an important systems lesson: the most accurate classifier need not minimize operational cost. All code, seeds, raw outputs, figures, tests, and an interactive custom-queue demonstration are included for audit and reproduction.
 
+\subsection*{AI-Use Disclosure}
 Generative AI assisted with scaffolding, implementation, documentation, and debugging. All numerical claims in this paper were regenerated by deterministic code and checked against committed CSV/JSON outputs. The student remains responsible for understanding and defending the work.
 
 \begin{thebibliography}{9}\small
