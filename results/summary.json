@@ -1,0 +1,74 @@
+{
+  "configuration": {
+    "tracks": [
+      0,
+      199
+    ],
+    "head": 50,
+    "window_size": 50,
+    "windows_per_workload_per_seed": 20,
+    "train_seeds": [
+      1,
+      20
+    ],
+    "test_seeds": [
+      100,
+      110
+    ],
+    "model": "DecisionTreeClassifier(max_depth=5, min_samples_leaf=12, class_weight=balanced, random_state=42)"
+  },
+  "training": {
+    "windows_total": 1200,
+    "windows_primary_non_tied": 1130,
+    "ties": 70,
+    "oracle_label_distribution_including_ties": {
+      "FCFS": 63,
+      "FCFS|SCAN": 6,
+      "FCFS|SSTF": 14,
+      "FCFS|SSTF|SCAN": 6,
+      "SCAN": 267,
+      "SSTF": 800,
+      "SSTF|SCAN": 44
+    },
+    "primary_label_distribution": {
+      "FCFS": 63,
+      "SCAN": 267,
+      "SSTF": 800
+    }
+  },
+  "testing": {
+    "test_windows_total": 660,
+    "test_windows_primary_non_tied": 597,
+    "test_ties": 63,
+    "accuracy_primary_non_tied": 0.7437185929648241,
+    "accuracy_all_tie_aware": 0.7560606060606061,
+    "total_regret": 5278,
+    "mean_regret": 7.996969696969697,
+    "zero_regret_fraction": 0.7560606060606061,
+    "mean_confidence_correct_primary": 0.8774757597016722,
+    "mean_confidence_wrong_primary": 0.7776457544942739,
+    "ece_10_bins": 0.14833174767237325,
+    "total_seek": {
+      "FCFS": 902104,
+      "SSTF": 133276,
+      "SCAN": 144737,
+      "C-SCAN": 251307,
+      "oracle": 119296,
+      "selector": 124574
+    }
+  },
+  "shifts": {
+    "random_to_bursty": {
+      "mean_regret_before": 4.322727272727272,
+      "mean_regret_after": 1.490909090909091,
+      "mean_confidence_before": 0.7991294048334859,
+      "mean_confidence_after": 0.8893885054122705
+    },
+    "sequential_to_random": {
+      "mean_regret_before": 19.063636363636363,
+      "mean_regret_after": 3.1818181818181817,
+      "mean_confidence_before": 0.8607432194000733,
+      "mean_confidence_after": 0.8086455774016184
+    }
+  }
+}
